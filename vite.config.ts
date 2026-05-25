@@ -18,9 +18,10 @@ export default defineConfig({
     },
   },
   server: {
+    port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:4523/mock/8311458/api',
+        target: 'http://4000.s.sendi.wang:40008/api',
         changeOrigin: true,
       },
     },

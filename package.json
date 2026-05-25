@@ -12,12 +12,14 @@
   },
   "dependencies": {
     "axios": "^1.16.1",
+    "crypto-js": "^4.2.0",
     "vue": "^3.5.32",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.2.22",
     "@tsconfig/node24": "^24.0.4",
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^24.12.2",
     "@unocss/preset-icons": "^66.7.0",
     "@unocss/preset-wind3": "^66.7.0",

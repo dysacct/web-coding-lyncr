@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  release:
+    desc: 发布小程序
+    cmds:
+      - |
+        pnpm build:mp-weixin
+      - |
+        node ./push/start.js
