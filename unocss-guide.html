@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pnpm + Vue 3 + UnoCSS + Tailwind CSS 完整教学</title>
+<style>
+  :root {
+    --bg: #0b1121;
+    --card: #1a2332;
+    --border: #2d3a4a;
+    --text: #e2e8f0;
+    --dim: #8899aa;
+    --accent: #38bdf8;
+    --green: #4ade80;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --purple: #a78bfa;
+    --pink: #f472b6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.85;
+    padding: 40px 20px;
+  }
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  h1 {
+    font-size: 2.1rem;
+    text-align: center;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--purple), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    text-align: center; color: var(--dim); margin-bottom: 40px;
+    font-size: 0.95rem;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    margin: 44px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 1.12rem;
+    margin: 28px 0 10px;
+    color: var(--purple);
+  }
+  h4 {
+    font-size: 1rem;
+    margin: 20px 0 8px;
+    color: var(--pink);
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card.tip  { border-left: 4px solid var(--accent); }
+  .card.warn { border-left: 4px solid var(--yellow); }
+  .card.info { border-left: 4px solid var(--green); }
+  .card.danger { border-left: 4px solid var(--red); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 0.9rem;
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  td code { white-space: nowrap; }
+
+  code {
+    background: #0f1a2a;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.88rem;
+    color: var(--green);
+  }
+  pre {
+    background: #0f1a2a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-size: 0.84rem;
+    line-height: 1.75;
+  }
+  pre code { background: none; padding: 0; color: var(--text); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .badge.install { background: #14532d; color: var(--green); }
+  .badge.config  { background: #1e3a5f; color: var(--accent); }
+  .badge.import  { background: #4a1d6e; color: var(--purple); }
+  .badge.note    { background: #713f12; color: var(--yellow); }
+
+  ul, ol { padding-left: 24px; margin: 8px 0; }
+  li { margin: 6px 0; }
+
+  .diff-add { color: var(--green); }
+  .diff-del { color: var(--red); }
+
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 640px) {
+    .compare { grid-template-columns: 1fr; }
+  }
+
+  .path-block {
+    background: #0f1a2a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    font-family: monospace;
+    font-size: 0.85rem;
+  }
+  .path-block .file { color: var(--accent); }
+  .path-block .comment { color: var(--dim); }
+
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>pnpm + Vue 3 + UnoCSS + Tailwind CSS</h1>
+<p class="subtitle">从创建项目到双引擎样式体系，一份完整的工程化教学文档</p>
+
+<!-- ============ TOC ============ -->
+<div class="card toc">
+  <h3 style="margin-top:0">目录</h3>
+  <ol>
+    <li><a href="#c1">pnpm 包管理器和安装</a></li>
+    <li><a href="#c2">用 pnpm 创建 Vue 3 + Vite 项目</a></li>
+    <li><a href="#c3">下载和安装 UnoCSS</a></li>
+    <li><a href="#c4">在项目中导入和配置 UnoCSS</a></li>
+    <li><a href="#c5">UnoCSS preset-wind3：内置的 Tailwind CSS 兼容层</a></li>
+    <li><a href="#c6">UnoCSS 原生用法：class 书写、shortcuts、theme</a></li>
+    <li><a href="#c7">UnoCSS + Tailwind CSS 联合使用</a></li>
+    <li><a href="#c8">进阶：图标、Variant Group、Attributify</a></li>
+    <li><a href="#c9">完整项目配置文件清单</a></li>
+    <li><a href="#c10">多模式脚本：pnpm dev:h5 等命令的原理与配置</a></li>
+    <li><a href="#c11">速查表</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="c1">1. pnpm 包管理器和安装</h2>
+
+<div class="card">
+  <h3>pnpm 是什么</h3>
+  <p><strong>pnpm</strong>（performant npm）是一个高效的 Node.js 包管理器。它通过<strong>硬链接 + 符号链接</strong>的方式共享依赖，核心优势：</p>
+  <ul>
+    <li><strong>磁盘空间极省</strong>：同一包的不同版本只存一份，多个项目共享</li>
+    <li><strong>安装极快</strong>：比 npm / yarn 快 2-3 倍</li>
+    <li><strong>严格的 node_modules</strong>：只有声明过的依赖才能被访问，杜绝幽灵依赖</li>
+    <li><strong>原生支持 monorepo</strong>：内置 workspace 功能</li>
+  </ul>
+</div>
+
+<div class="card tip">
+  <h3>安装 pnpm</h3>
+  <pre><code># 方式一：通过 npm 安装（推荐）
+npm install -g pnpm
+
+# 方式二：通过 Homebrew 安装（macOS）
+brew install pnpm
+
+# 方式三：通过 Corepack 启用（Node.js 16+ 内置）
+corepack enable
+corepack prepare pnpm@latest --activate
+
+# 验证安装
+pnpm --version</code></pre>
+</div>
+
+<div class="card">
+  <h3>pnpm vs npm vs yarn 命令对照</h3>
+  <table>
+    <tr><th>操作</th><th>pnpm</th><th>npm</th><th>yarn</th></tr>
+    <tr><td>安装全部依赖</td><td><code>pnpm install</code></td><td><code>npm install</code></td><td><code>yarn</code></td></tr>
+    <tr><td>添加包</td><td><code>pnpm add pkg</code></td><td><code>npm install pkg</code></td><td><code>yarn add pkg</code></td></tr>
+    <tr><td>添加开发依赖</td><td><code>pnpm add -D pkg</code></td><td><code>npm install -D pkg</code></td><td><code>yarn add -D pkg</code></td></tr>
+    <tr><td>全局安装</td><td><code>pnpm add -g pkg</code></td><td><code>npm install -g pkg</code></td><td><code>yarn global add pkg</code></td></tr>
+    <tr><td>移除包</td><td><code>pnpm remove pkg</code></td><td><code>npm uninstall pkg</code></td><td><code>yarn remove pkg</code></td></tr>
+    <tr><td>运行脚本</td><td><code>pnpm dev</code></td><td><code>npm run dev</code></td><td><code>yarn dev</code></td></tr>
+    <tr><td>更新包</td><td><code>pnpm update</code></td><td><code>npm update</code></td><td><code>yarn upgrade</code></td></tr>
+  </table>
+</div>
+
+<!-- ============ 2 ============ -->
+<h2 id="c2">2. 用 pnpm 创建 Vue 3 + Vite 项目</h2>
+
+<div class="card tip">
+  <h3>创建项目</h3>
+  <pre><code># 进入你的工作目录
+cd ~/workspace
+
+# 用 Vite 官方脚手架创建 Vue 3 + TypeScript 项目
+pnpm create vite@latest my-vue-app -- --template vue-ts
+
+# 进入项目
+cd my-vue-app
+
+# 安装依赖
+pnpm install
+
+# 启动开发服务器
+pnpm dev</code></pre>
+</div>
+
+<div class="card">
+  <h3>创建后的项目结构</h3>
+  <pre><code>my-vue-app/
+├── index.html
+├── package.json
+├── pnpm-lock.yaml          # pnpm 的锁文件（替代 package-lock.json）
+├── tsconfig.json
+├── vite.config.ts
+├── public/
+└── src/
+    ├── App.vue
+    ├── main.ts
+    ├── style.css
+    └── components/
+        └── HelloWorld.vue</code></pre>
+</div>
+
+<div class="card warn">
+  <h3>pnpm-lock.yaml 注意事项</h3>
+  <p>pnpm 生成的是 <code>pnpm-lock.yaml</code>，<strong>不是</strong> <code>package-lock.json</code>。这个文件必须提交到 Git，确保团队所有人的依赖版本一致。</p>
+</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="c3">3. 下载和安装 UnoCSS</h2>
+
+<div class="card">
+  <h3>UnoCSS 是什么</h3>
+  <p>UnoCSS 是一个<strong>即时按需的原子化 CSS 引擎</strong>。相比 Tailwind CSS：</p>
+  <ul>
+    <li><strong>零配置启动</strong>，但高度可定制</li>
+    <li><strong>无解析、无 AST</strong>，直接正则匹配，构建更快</li>
+    <li>通过 <strong>preset（预设）</strong> 系统完全兼容 Tailwind CSS 语法</li>
+    <li>不生成几 MB 的初始 CSS，<strong>只生成你用到的样式</strong></li>
+  </ul>
+</div>
+
+<div class="card tip">
+  <h3>安装 UnoCSS</h3>
+
+  <h4>基础安装：</h4>
+  <pre><code><span class="comment"># 核心包 + Vite 插件（Vite 项目必装）</span>
+pnpm add -D unocss
+
+<span class="comment"># CSS 重置（类似 Tailwind 的 @tailwind base）</span>
+pnpm add -D @unocss/reset</code></pre>
+
+  <h4>常用预设（preset）：</h4>
+  <pre><code><span class="comment"># preset-wind3：Tailwind CSS v3 兼容层（最常用，安装一个即可拥有全部 Tailwind 语法）</span>
+pnpm add -D @unocss/preset-wind3
+
+<span class="comment"># preset-icons：图标支持（基于 Iconify，可使用 200+ 图标集的 20 万+ 图标）</span>
+pnpm add -D @unocss/preset-icons
+
+<span class="comment"># preset-attributify：允许用 HTML attribute 写样式</span>
+pnpm add -D @unocss/preset-attributify
+
+<span class="comment"># preset-typography：排版预设（类似 @tailwindcss/typography 插件）</span>
+pnpm add -D @unocss/preset-typography
+
+<span class="comment"># preset-rem-to-px：自动将 rem 转为 px</span>
+pnpm add -D @unocss/preset-rem-to-px</code></pre>
+
+  <h4>图标包（配合 preset-icons 使用）：</h4>
+  <pre><code><span class="comment"># 安装你需要的图标集，比如 Carbon Icons</span>
+pnpm add -D @iconify-json/carbon
+
+<span class="comment"># 其他常用图标集</span>
+pnpm add -D @iconify-json/mdi          # Material Design Icons
+pnpm add -D @iconify-json/heroicons    # Tailwind Heroicons
+pnpm add -D @iconify-json/ri           # Remix Icon
+pnpm add -D @iconify-json/simple-icons # 品牌 Logo</code></pre>
+</div>
+
+<div class="card info">
+  <h3>一次安装全部推荐包</h3>
+  <pre><code>pnpm add -D unocss @unocss/reset @unocss/preset-wind3 @unocss/preset-icons @unocss/preset-attributify
+pnpm add -D @iconify-json/carbon</code></pre>
+</div>
+
+<!-- ============ 4 ============ -->
+<h2 id="c4">4. 在项目中导入和配置 UnoCSS</h2>
+
+<div class="card">
+  <h3>第一步：修改 vite.config.ts，注册 UnoCSS 插件</h3>
+  <pre><code>// vite.config.ts
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import UnoCSS from 'unocss/vite'          // ← 导入 UnoCSS Vite 插件
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    UnoCSS(),                              // ← 注册插件
+  ],
+})</code></pre>
+  <p class="badge note">UnoCSS 插件必须放在 Vue 插件之后</p>
+</div>
+
+<div class="card">
+  <h3>第二步：创建 uno.config.ts（UnoCSS 配置文件）</h3>
+  <p>在项目根目录创建 <code>uno.config.ts</code>：</p>
+  <pre><code>// uno.config.ts
+import { defineConfig } from 'unocss'
+import presetWind3 from '@unocss/preset-wind3'
+
+export default defineConfig({
+  presets: [
+    presetWind3(),   // ← 启用 Tailwind CSS 兼容预设
+  ],
+})</code></pre>
+</div>
+
+<div class="card">
+  <h3>第三步：在 main.ts 中导入 UnoCSS 样式</h3>
+  <pre><code>// src/main.ts
+import { createApp } from 'vue'
+import App from './App.vue'
+
+// UnoCSS 的 CSS Reset（类似 @tailwind base）
+import '@unocss/reset/tailwind.css'
+
+// UnoCSS 按需生成的工具类样式
+import 'virtual:uno.css'
+
+createApp(App).mount('#app')</code></pre>
+</div>
+
+<div class="card warn">
+  <h3>关于 virtual:uno.css</h3>
+  <p><code>virtual:uno.css</code> 是一个<strong>虚拟模块</strong>，由 UnoCSS Vite 插件在开发/构建时动态生成。它不是磁盘上的真实文件——插件会扫描你的源码，找到你用到的所有 class，然后<strong>只生成这些 class 对应的 CSS</strong>。这就是 UnoCSS "按需生成" 的核心机制。</p>
+</div>
+
+<!-- ============ 5 ============ -->
+<h2 id="c5">5. preset-wind3：内置的 Tailwind CSS 兼容层</h2>
+
+<div class="card info">
+  <p><strong>preset-wind3</strong> 是 UnoCSS 官方的 Tailwind CSS v3 兼容预设。安装了它，你就可以用所有你熟悉的 Tailwind CSS class：<code>flex</code>、<code>grid</code>、<code>p-4</code>、<code>text-red-500</code>、<code>hover:bg-blue-600</code>……全部可用，<strong>不需要单独安装 tailwindcss 包</strong>。</p>
+</div>
+
+<div class="compare">
+  <div class="card">
+    <h4>原生 Tailwind CSS 方式</h4>
+    <pre><code><span class="comment"># 需要安装这些</span>
+pnpm add -D tailwindcss postcss autoprefixer
+
+<span class="comment"># 需要 tailwind.config.js</span>
+module.exports = {
+  content: ['./index.html', './src/**/*.{vue,ts}'],
+  theme: { extend: {} },
+  plugins: [],
+}
+
+<span class="comment"># 主 CSS 文件中写三个 @tailwind 指令</span>
+@tailwind base;
+@tailwind components;
+@tailwind utilities;</code></pre>
+  </div>
+  <div class="card">
+    <h4>UnoCSS + preset-wind3 方式</h4>
+    <pre><code><span class="comment"># 只需要这两个包</span>
+pnpm add -D unocss @unocss/preset-wind3
+
+<span class="comment"># uno.config.ts 一行配置</span>
+import { defineConfig } from 'unocss'
+import presetWind3 from '@unocss/preset-wind3'
+
+export default defineConfig({
+  presets: [presetWind3()],
+})
+
+<span class="comment"># main.ts 一行导入</span>
+import 'virtual:uno.css'</code></pre>
+  </div>
+</div>
+
+<div class="card tip">
+  <h3>preset-wind3 支持的 Tailwind 功能完整度</h3>
+  <table>
+    <tr><th>Tailwind 功能</th><th>preset-wind3</th><th>说明</th></tr>
+    <tr><td>布局 (flex, grid, block...)</td><td>✅ 完全支持</td><td>语法完全相同</td></tr>
+    <tr><td>间距 (p-, m-, gap-...)</td><td>✅ 完全支持</td><td>语法完全相同</td></tr>
+    <tr><td>颜色 (red-500, blue-600...)</td><td>✅ 完全支持</td><td>语法完全相同</td></tr>
+    <tr><td>排版 (text-, font-, leading-...)</td><td>✅ 完全支持</td><td>语法完全相同</td></tr>
+    <tr><td>响应式 (sm:, md:, lg:...)</td><td>✅ 完全支持</td><td>语法完全相同</td></tr>
+    <tr><td>暗黑模式 (dark:)</td><td>✅ 完全支持</td><td>语法完全相同</td></tr>
+    <tr><td>状态变体 (hover:, focus:, active:...)</td><td>✅ 完全支持</td><td>语法完全相同</td></tr>
+    <tr><td>动画 (animate-)</td><td>✅ 支持</td><td>配置方式略有不同</td></tr>
+    <tr><td>@apply 指令</td><td>❌ 不支持</td><td>改用 shortcuts</td></tr>
+    <tr><td>@layer 指令</td><td>❌ 不支持</td><td>改用 layers 配置</td></tr>
+    <tr><td>tailwind.config.js</td><td>❌ 不适用</td><td>改用 uno.config.ts</td></tr>
+    <tr><td>JIT 模式</td><td>✅ 原生 JIT</td><td>UnoCSS 天生就是按需的</td></tr>
+  </table>
+</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="c6">6. UnoCSS 原生用法：class 书写、shortcuts、theme</h2>
+
+<div class="card">
+  <h3>在 Vue 组件中使用（和 Tailwind 语法一模一样）</h3>
+  <pre><code>&lt;template&gt;
+  &lt;!-- 所有 Tailwind class 直接可用 --&gt;
+  &lt;div class="flex items-center justify-center min-h-screen bg-gray-900 p-4"&gt;
+    &lt;div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8"&gt;
+      &lt;h1 class="text-2xl font-bold text-gray-800 mb-6"&gt;
+        欢迎登录
+      &lt;/h1&gt;
+      &lt;button class="w-full py-3 bg-blue-600 hover:bg-blue-500
+                       text-white font-medium rounded-xl
+                       active:scale-98 transition-all"&gt;
+        立即登录
+      &lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+</div>
+
+<div class="card">
+  <h3>Shortcuts：自定义快捷类（替代 @apply）</h3>
+  <p>Tailwind 里用 <code>@apply</code> 组合样式，UnoCSS 里用 <strong>shortcuts</strong>：</p>
+  <pre><code>// uno.config.ts
+export default defineConfig({
+  presets: [presetWind3()],
+  shortcuts: {
+    // 简单映射：一个 key 对应一组 class
+    'btn': 'py-2 px-4 font-semibold rounded-lg shadow-md',
+    'btn-primary': 'btn bg-blue-600 text-white hover:bg-blue-500',
+    'btn-danger': 'btn bg-red-600 text-white hover:bg-red-500',
+
+    // 也支持动态规则（用正则）
+    // 'btn-(.*)': 'btn bg-$1 text-white',  // 比如 btn-red → btn bg-red text-white
+  },
+})</code></pre>
+  <p>在组件中直接使用：</p>
+  <pre><code>&lt;button class="btn-primary"&gt;登录&lt;/button&gt;
+&lt;button class="btn-danger"&gt;删除&lt;/button&gt;</code></pre>
+</div>
+
+<div class="card">
+  <h3>Theme：自定义主题变量</h3>
+  <pre><code>// uno.config.ts
+export default defineConfig({
+  presets: [presetWind3()],
+  theme: {
+    colors: {
+      // 扩展颜色板
+      brand: {
+        primary: '#6366f1',
+        secondary: '#a855f7',
+      },
+    },
+    // 自定义断点
+    breakpoints: {
+      tablet: '768px',
+      desktop: '1024px',
+    },
+    // 自定义动画
+    animation: {
+      keyframes: {
+        'slide-up': '{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}',
+      },
+      durations: {
+        'slide-up': '0.3s',
+      },
+    },
+  },
+})</code></pre>
+  <p>使用：<code>text-brand-primary</code>、<code>tablet:text-lg</code>、<code>animate-slide-up</code></p>
+</div>
+
+<div class="card">
+  <h3>Rules：自定义原子类</h3>
+  <pre><code>// uno.config.ts
+export default defineConfig({
+  rules: [
+    // 自定义 margin 规则：m-<number>
+    [/^m-(\d+)$/, ([, d]) => ({ margin: `${Number(d) * 4}px` })],
+    // 自定义文字阴影
+    ['text-shadow', { 'text-shadow': '0 2px 4px rgba(0,0,0,0.3)' }],
+    // 自定义玻璃效果
+    ['glass', {
+      background: 'rgba(255,255,255,0.1)',
+      'backdrop-filter': 'blur(10px)',
+      border: '1px solid rgba(255,255,255,0.1)',
+    }],
+  ],
+})</code></pre>
+</div>
+
+<!-- ============ 7 ============ -->
+<h2 id="c7">7. UnoCSS + Tailwind CSS 联合使用</h2>
+
+<div class="card">
+  <h3>联合使用的三种策略</h3>
+</div>
+
+<div class="card info">
+  <h3>策略 A（推荐）：只用 UnoCSS + preset-wind3，抛弃 Tailwind CSS</h3>
+  <p><strong>这是最推荐的方案。</strong>preset-wind3 完全兼容 Tailwind 语法，你写的 class 和 Tailwind 一模一样，但底层是 UnoCSS 引擎，速度快、按需生成、配置更灵活。你的项目就是这样做的：</p>
+  <pre><code>// package.json（你当前项目的实际配置）
+"devDependencies": {
+  "unocss": "^66.7.0",
+  "@unocss/preset-wind3": "^66.7.0",
+  "@unocss/preset-icons": "^66.7.0",
+  "@unocss/reset": "^66.7.0",
+  // 注意：没有 tailwindcss 包！
+}</code></pre>
+</div>
+
+<div class="card warn">
+  <h3>策略 B：UnoCSS + Tailwind CSS 共存（两套体系并行）</h3>
+  <p>如果你有一个已有的 Tailwind 项目，想逐步迁移到 UnoCSS，可以两套同时跑：</p>
+  <pre><code>pnpm add -D unocss @unocss/preset-wind3
+pnpm add -D tailwindcss postcss autoprefixer</code></pre>
+
+  <h4>关键配置：让两者不冲突</h4>
+  <pre><code>// uno.config.ts — UnoCSS 加上前缀，避免和 Tailwind 冲突
+export default defineConfig({
+  presets: [presetWind3()],
+  prefix: 'u-',   // ← UnoCSS 的 class 加 u- 前缀
+})
+
+// tailwind.config.js — Tailwind 也加前缀
+export default {
+  content: ['./index.html', './src/**/*.{vue,ts}'],
+  prefix: 'tw-',  // ← Tailwind 的 class 加 tw- 前缀
+}</code></pre>
+
+  <p>使用效果：</p>
+  <pre><code>&lt;!-- UnoCSS 的 class（加 u- 前缀）--&gt;
+&lt;div class="u-flex u-items-center u-p-4 u-bg-blue-500"&gt;
+
+&lt;!-- Tailwind 的 class（加 tw- 前缀）--&gt;
+&lt;div class="tw-flex tw-items-center tw-p-4 tw-bg-red-500"&gt;
+
+&lt;!-- 也可以混合使用 --&gt;
+&lt;div class="tw-flex tw-p-4 u-bg-blue-500 u-text-white"&gt;</code></pre>
+</div>
+
+<div class="card danger">
+  <h3>策略 C：UnoCSS 作为 Tailwind CSS 的插件（Tailwind 为主）</h3>
+  <p>Vite 模式下 UnoCSS <code>@unocss/postcss-extension</code> 可作为 PostCSS 插件运行在 Tailwind 之前/之后，用 UnoCSS 补充 Tailwind 没有的功能（如纯 CSS 图标）。</p>
+  <p>这个方案比较小众，一般不需要。</p>
+</div>
+
+<div class="card tip">
+  <h3>三种策略对比</h3>
+  <table>
+    <tr><th>策略</th><th>包体积</th><th>构建速度</th><th>学习成本</th><th>适用场景</th></tr>
+    <tr><td>A：纯 UnoCSS</td><td>最轻</td><td>最快</td><td>低</td><td>新项目、想用 Tailwind 语法但追求性能</td></tr>
+    <tr><td>B：UnoCSS + Tailwind 共存</td><td>较重</td><td>中等</td><td>中</td><td>迁移中的项目、逐步替换</td></tr>
+    <tr><td>C：Tailwind 为主 + UnoCSS 补充</td><td>最重</td><td>最慢</td><td>中</td><td>高度依赖 Tailwind 插件生态的老项目</td></tr>
+  </table>
+</div>
+
+<!-- ============ 8 ============ -->
+<h2 id="c8">8. 进阶：图标、Variant Group、Attributify</h2>
+
+<div class="card">
+  <h3>图标（preset-icons）</h3>
+  <p>安装：<code>pnpm add -D @unocss/preset-icons @iconify-json/carbon</code></p>
+  <pre><code>// uno.config.ts
+import presetIcons from '@unocss/preset-icons'
+
+export default defineConfig({
+  presets: [
+    presetWind3(),
+    presetIcons({
+      // 图标名映射为 class：i-carbon-{图标名}
+      collections: {
+        carbon: () => import('@iconify-json/carbon/icons.json').then(m => m.default),
+      },
+      scale: 1.2,
+    }),
+  ],
+})</code></pre>
+  <p>使用：</p>
+  <pre><code>&lt;!-- 直接用 class 渲染图标，无需 import 组件 --&gt;
+&lt;span class="i-carbon-logo-wechat text-green-500 text-2xl" /&gt;
+&lt;span class="i-carbon-user-avatar text-blue-500" /&gt;
+&lt;span class="i-carbon-settings text-gray-400 hover:text-white" /&gt;</code></pre>
+  <p>图标变成 <strong>纯 CSS 内联 SVG</strong>，不会增加 JS 体积，且可以像文字一样用 <code>text-*</code> 控制颜色和大小。</p>
+</div>
+
+<div class="card">
+  <h3>Variant Group（变体组）</h3>
+  <p>安装：内置在 <code>unocss</code> 中，无需额外安装。</p>
+  <p>Variant Group 让你用括号将多个共享前缀的 class 分组：</p>
+  <pre><code>&lt;!-- 传统写法：重复写 hover: 前缀 --&gt;
+&lt;div class="hover:bg-blue-600 hover:text-white hover:border-blue-600"&gt;
+
+&lt;!-- Variant Group：括号内共享 hover: 前缀 --&gt;
+&lt;div class="hover:(bg-blue-600 text-white border-blue-600)"&gt;</code></pre>
+
+  <pre><code>// uno.config.ts — 需要在 config 中启用 transformer
+import { transformerVariantGroup } from 'unocss'
+
+export default defineConfig({
+  transformers: [
+    transformerVariantGroup(),   // ← 启用 Variant Group
+  ],
+})</code></pre>
+
+  <p>更多用法：</p>
+  <pre><code>&lt;!-- 嵌套变体组 --&gt;
+&lt;div class="sm:(p-4 flex gap-2) lg:(p-8 flex-col gap-4)"&gt;
+
+&lt;!-- 混合使用 --&gt;
+&lt;button class="bg-blue-600 hover:(bg-blue-500 scale-105) active:scale-95"&gt;</code></pre>
+</div>
+
+<div class="card">
+  <h3>Attributify 模式</h3>
+  <p>安装：<code>pnpm add -D @unocss/preset-attributify</code></p>
+  <p>让你直接在 HTML attribute 上写样式，<strong>不用 class 属性</strong>：</p>
+  <pre><code>&lt;!-- 传统 class 写法 --&gt;
+&lt;button class="bg-blue-600 text-white py-3 px-6 rounded-xl font-bold"&gt;
+  登录
+&lt;/button&gt;
+
+&lt;!-- Attributify 写法 --&gt;
+&lt;button
+  bg="blue-600"
+  text="white"
+  p="y-3 x-6"
+  font="bold"
+  border="rounded-xl"
+&gt;
+  登录
+&lt;/button&gt;</code></pre>
+  <pre><code>// uno.config.ts
+import presetAttributify from '@unocss/preset-attributify'
+
+export default defineConfig({
+  presets: [
+    presetWind3(),
+    presetAttributify(),   // ← 启用 Attributify
+  ],
+})</code></pre>
+</div>
+
+<!-- ============ 9 ============ -->
+<h2 id="c9">9. 完整项目配置文件清单</h2>
+
+<div class="card">
+  <h3>最终文件结构</h3>
+  <pre><code>my-vue-app/
+├── index.html
+├── package.json
+├── pnpm-lock.yaml
+├── tsconfig.json
+├── tsconfig.app.json
+├── vite.config.ts
+├── uno.config.ts              # ← UnoCSS 配置
+├── src/
+│   ├── main.ts                # ← 导入 UnoCSS 样式
+│   ├── App.vue
+│   ├── style.css
+│   └── components/
+│       └── HelloWorld.vue
+└── public/
+    └── favicon.ico</code></pre>
+</div>
+
+<div class="card">
+  <h3>package.json（完整 devDependencies）</h3>
+  <pre><code>{
+  "name": "my-vue-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.x"
+  },
+  "devDependencies": {
+    "@iconify-json/carbon": "^1.2.x",
+    "@unocss/preset-attributify": "^66.x",
+    "@unocss/preset-icons": "^66.x",
+    "@unocss/preset-wind3": "^66.x",
+    "@unocss/reset": "^66.x",
+    "@vitejs/plugin-vue": "^6.x",
+    "typescript": "~5.x",
+    "unocss": "^66.x",
+    "vite": "^8.x",
+    "vue-tsc": "^3.x"
+  }
+}</code></pre>
+</div>
+
+<div class="card">
+  <h3>uno.config.ts（完整配置）</h3>
+  <pre><code>// uno.config.ts
+import { defineConfig, transformerVariantGroup } from 'unocss'
+import presetWind3 from '@unocss/preset-wind3'
+import presetIcons from '@unocss/preset-icons'
+import presetAttributify from '@unocss/preset-attributify'
+
+export default defineConfig({
+  presets: [
+    presetWind3(),
+    presetIcons({
+      collections: {
+        carbon: () => import('@iconify-json/carbon/icons.json').then(m => m.default),
+      },
+      scale: 1.2,
+    }),
+    presetAttributify(),
+  ],
+
+  transformers: [
+    transformerVariantGroup(),
+  ],
+
+  theme: {
+    colors: {
+      brand: { primary: '#6366f1', secondary: '#a855f7' },
+    },
+    animation: {
+      keyframes: {
+        'fade-in': '{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}',
+      },
+    },
+  },
+
+  shortcuts: {
+    'btn': 'py-2 px-4 font-semibold rounded-lg shadow-md transition-all active:scale-98',
+    'btn-primary': 'btn bg-blue-600 text-white hover:bg-blue-500',
+    'glass': 'bg-white/10 backdrop-blur-xl border border-white/10',
+  },
+})</code></pre>
+</div>
+
+<div class="card">
+  <h3>vite.config.ts（完整配置）</h3>
+  <pre><code>// vite.config.ts
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import UnoCSS from 'unocss/vite'
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    UnoCSS(),
+  ],
+})</code></pre>
+</div>
+
+<div class="card">
+  <h3>src/main.ts（完整配置）</h3>
+  <pre><code>// src/main.ts
+import { createApp } from 'vue'
+import App from './App.vue'
+
+// UnoCSS 的 CSS Reset — 消除浏览器默认样式
+import '@unocss/reset/tailwind.css'
+// UnoCSS 按需生成的原子 CSS — 包含你项目中用到的所有 class
+import 'virtual:uno.css'
+
+createApp(App).mount('#app')</code></pre>
+</div>
+
+<!-- ============ 10 ============ -->
+<h2 id="c10">10. 速查表</h2>
+
+<div class="card">
+  <table>
+    <tr><th>事项</th><th>命令 / 配置</th></tr>
+    <tr><td>安装 pnpm</td><td><code>npm install -g pnpm</code></td></tr>
+    <tr><td>创建 Vue 3 项目</td><td><code>pnpm create vite@latest my-app -- --template vue-ts</code></td></tr>
+    <tr><td>安装依赖</td><td><code>pnpm install</code></td></tr>
+    <tr><td>启动开发</td><td><code>pnpm dev</code></td></tr>
+    <tr><td>安装 UnoCSS 全家桶</td><td><code>pnpm add -D unocss @unocss/reset @unocss/preset-wind3 @unocss/preset-icons @unocss/preset-attributify</code></td></tr>
+    <tr><td>安装图标</td><td><code>pnpm add -D @iconify-json/carbon</code></td></tr>
+    <tr><td>锁文件</td><td><code>pnpm-lock.yaml</code>（必须提交 Git）</td></tr>
+    <tr><td>UnoCSS 入口</td><td><code>main.ts</code> 中导入 <code>import 'virtual:uno.css'</code></td></tr>
+    <tr><td>配置文件</td><td>项目根目录 <code>uno.config.ts</code></td></tr>
+    <tr><td>Vite 插件注册</td><td><code>vite.config.ts</code> 中 <code>import UnoCSS from 'unocss/vite'</code></td></tr>
+    <tr><td>Tailwind 兼容</td><td>安装 <code>@unocss/preset-wind3</code>，语法完全兼容</td></tr>
+    <tr><td>联合使用策略</td><td>推荐策略 A：只用 UnoCSS，无需 Tailwind CSS</td></tr>
+    <tr><td>Shortcuts</td><td><code>uno.config.ts</code> 的 <code>shortcuts</code> 字段（替代 @apply）</td></tr>
+    <tr><td>图标渲染</td><td>纯 CSS SVG，class 格式 <code>i-{图标集}-{图标名}</code></td></tr>
+    <tr><td>Variant Group</td><td><code>hover:(bg-red text-white)</code>，需启用 transformer</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>预设对照表</h3>
+  <table>
+    <tr><th>Preset 包名</th><th>对应 Tailwind / 功能</th></tr>
+    <tr><td><code>@unocss/preset-wind3</code></td><td>Tailwind CSS v3 完整兼容</td></tr>
+    <tr><td><code>@unocss/preset-wind4</code></td><td>Tailwind CSS v4 兼容（实验性）</td></tr>
+    <tr><td><code>@unocss/preset-uno</code></td><td>UnoCSS 自有的默认预设（与 Wind 略有差异）</td></tr>
+    <tr><td><code>@unocss/preset-icons</code></td><td>Iconify 图标（20 万+ 图标，纯 CSS）</td></tr>
+    <tr><td><code>@unocss/preset-attributify</code></td><td>HTML attribute 模式写样式</td></tr>
+    <tr><td><code>@unocss/preset-typography</code></td><td>排版预设（类似 @tailwindcss/typography）</td></tr>
+    <tr><td><code>@unocss/preset-web-fonts</code></td><td>Web 字体（Google Fonts 等）</td></tr>
+    <tr><td><code>@unocss/preset-rem-to-px</code></td><td>自动 rem → px 转换</td></tr>
+  </table>
+</div>
+
+<!-- ============ 11 ============ -->
+<h2 id="c10">10. 多模式脚本：pnpm dev:h5 等命令的原理与配置</h2>
+
+<div class="card">
+  <h3>这些命令是什么</h3>
+  <p><code>pnpm dev:h5</code>、<code>pnpm build:app</code>、<code>pnpm dev:mp-weixin</code> 这类<strong>冒号后缀</strong>的命令，本质上是 <code>package.json</code> 里 <code>scripts</code> 的自定义命名。</p>
+  <p>它们的核心原理是 <strong>Vite 的 <code>--mode</code> 参数 + 多环境变量文件 + 多配置文件</strong>，从而让同一套代码能编译成不同平台的目标产物。</p>
+  <div class="flow">
+    <div class="node">pnpm dev:h5</div>
+    <div class="arrow">→</div>
+    <div class="node">package.json scripts</div>
+    <div class="arrow">→</div>
+    <div class="node">vite --mode h5</div>
+    <div class="arrow">→</div>
+    <div class="node">加载 .env.h5</div>
+    <div class="arrow">→</div>
+    <div class="node">条件编译 → H5 产物</div>
+  </div>
+</div>
+
+<!-- 10.1 -->
+<h3>10.1 脚本命名规范</h3>
+
+<div class="card">
+  <h3>package.json 里的 scripts 配置</h3>
+  <p>冒号 <code>:</code> 只是命名约定，不是特殊语法。常见命名模式：</p>
+  <pre><code>{
+  "scripts": {
+    // ===== 开发命令 =====
+    "dev":         "vite",                         // 默认开发（通常是 H5/web）
+    "dev:h5":      "vite --mode h5",               // H5 移动端开发
+    "dev:app":     "vite --mode app",              // App 端开发
+    "dev:mp":      "vite --mode mp-weixin",        // 微信小程序开发
+
+    // ===== 构建命令 =====
+    "build":       "vite build",                   // 默认构建
+    "build:h5":    "vite build --mode h5",         // 构建 H5 产物
+    "build:app":   "vite build --mode app",        // 构建 App 产物
+    "build:mp":    "vite build --mode mp-weixin",  // 构建小程序产物
+
+    // ===== 跨平台统构（如 uni-app）=====
+    "dev:mp-weixin":  "uni",                       // uni-app 方式
+    "build:mp-toutiao": "uni build -p mp-toutiao", // 构建字节小程序
+  }
+}</code></pre>
+</div>
+
+<div class="card tip">
+  <h3>冒号命名约定一览</h3>
+  <table>
+    <tr><th>脚本名</th><th>动作</th><th>目标平台</th><th>适用场景</th></tr>
+    <tr><td><code>dev</code></td><td>开发</td><td>默认（Web）</td><td>纯 Web 应用</td></tr>
+    <tr><td><code>dev:h5</code></td><td>开发</td><td>H5（移动端网页）</td><td>移动端适配、微信公众号 H5</td></tr>
+    <tr><td><code>dev:app</code></td><td>开发</td><td>App（iOS/Android）</td><td>跨端 App 开发</td></tr>
+    <tr><td><code>dev:mp-weixin</code></td><td>开发</td><td>微信小程序</td><td>微信小程序开发</td></tr>
+    <tr><td><code>build</code></td><td>构建</td><td>默认（Web）</td><td>生产构建</td></tr>
+    <tr><td><code>build:h5</code></td><td>构建</td><td>H5</td><td>生成 dist/h5 产物</td></tr>
+    <tr><td><code>build:mp-weixin</code></td><td>构建</td><td>微信小程序</td><td>生成 dist/mp-weixin 产物</td></tr>
+    <tr><td><code>preview</code></td><td>预览</td><td>构建产物</td><td>本地预览生产构建</td></tr>
+    <tr><td><code>lint</code></td><td>检查</td><td>代码质量</td><td>ESLint / Prettier</td></tr>
+    <tr><td><code>test</code></td><td>测试</td><td>单元测试</td><td>Vitest / Jest</td></tr>
+  </table>
+</div>
+
+<!-- 10.2 -->
+<h3>10.2 Vite --mode 参数的核心机制</h3>
+
+<div class="card">
+  <h3>--mode 是什么</h3>
+  <p><code>vite --mode h5</code> 告诉 Vite：<strong>使用 <code>.env.h5</code> 文件中的环境变量</strong>。</p>
+  <p>Vite 启动时，会自动加载以下 <code>.env</code> 文件（加载优先级从低到高）：</p>
+  <pre><code>.env                  # 所有模式共享的变量
+.env.local            # 本地覆盖，不提交 Git
+.env.[mode]           # 特定模式的变量（如 .env.h5）
+.env.[mode].local     # 特定模式的本地覆盖</code></pre>
+</div>
+
+<div class="card info">
+  <h3>创建多模式环境变量文件</h3>
+  <pre><code># .env（所有模式共享）
+VITE_APP_TITLE=我的应用
+VITE_API_BASE_URL=https://api.example.com
+
+# .env.h5（H5 模式专用变量）
+VITE_PLATFORM=h5
+VITE_API_BASE_URL=https://h5-api.example.com
+
+# .env.app（App 模式专用变量）
+VITE_PLATFORM=app
+VITE_API_BASE_URL=https://app-api.example.com
+
+# .env.mp-weixin（小程序模式专用变量）
+VITE_PLATFORM=mp-weixin
+VITE_API_BASE_URL=https://mp-api.example.com</code></pre>
+
+  <p class="badge note">变量名必须以 <code>VITE_</code> 开头，才能在客户端代码中通过 <code>import.meta.env.VITE_XXX</code> 访问。</p>
+</div>
+
+<div class="card">
+  <h3>在代码中读取当前平台</h3>
+  <pre><code>// src/utils/platform.ts
+export const platform = import.meta.env.VITE_PLATFORM || 'h5'
+
+export const isH5 = platform === 'h5'
+export const isApp = platform === 'app'
+export const isMpWeixin = platform === 'mp-weixin'
+
+// 根据平台选择不同实现
+export function getStorage() {
+  if (isApp)     return nativeStorage    // App 原生存储
+  if (isMpWeixin) return wxStorage        // 微信小程序存储
+  return localStorage                     // H5 浏览器存储
+}</code></pre>
+
+  <pre><code>&lt;!-- 在 Vue 模板中条件渲染 --&gt;
+&lt;template&gt;
+  &lt;!-- H5 端显示 --&gt;
+  &lt;div v-if="isH5" class="flex items-center gap-2 p-4 bg-blue-500"&gt;
+    这是 H5 移动端页面
+  &lt;/div&gt;
+
+  &lt;!-- App 端显示 --&gt;
+  &lt;div v-if="isApp" class="p-4 bg-green-500"&gt;
+    这是 App 端页面
+  &lt;/div&gt;
+
+  &lt;!-- 小程序端显示 --&gt;
+  &lt;div v-if="isMpWeixin" class="p-4 bg-yellow-500"&gt;
+    这是小程序端页面
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+</div>
+
+<!-- 10.3 -->
+<h3>10.3 多 Platform 构建：不同 vite 配置文件</h3>
+
+<div class="card">
+  <h3>动态加载不同 Vite 配置</h3>
+  <p>不同平台往往需要不同的插件、输出目录等。可以在 <code>vite.config.ts</code> 里根据 mode 动态切换：</p>
+  <pre><code>// vite.config.ts
+import { defineConfig, type UserConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import UnoCSS from 'unocss/vite'
+
+export default defineConfig(({ mode }): UserConfig => {
+  // mode 就是 --mode 参数的值
+  console.log('当前构建模式:', mode)
+
+  const baseConfig: UserConfig = {
+    plugins: [vue(), UnoCSS()],
+    resolve: { alias: { '@': '/src' } },
+  }
+
+  // 根据 mode 合并不同配置
+  switch (mode) {
+    case 'h5':
+      return {
+        ...baseConfig,
+        base: '/h5/',
+        build: { outDir: 'dist/h5' },
+        define: { __PLATFORM__: JSON.stringify('h5') },
+      }
+
+    case 'app':
+      return {
+        ...baseConfig,
+        base: '/app/',
+        build: { outDir: 'dist/app' },
+        define: { __PLATFORM__: JSON.stringify('app') },
+      }
+
+    case 'mp-weixin':
+      return {
+        ...baseConfig,
+        build: { outDir: 'dist/mp-weixin' },
+        define: { __PLATFORM__: JSON.stringify('mp-weixin') },
+        // 小程序不需要 index.html
+      }
+
+    default:
+      return baseConfig
+  }
+})</code></pre>
+</div>
+
+<div class="card info">
+  <h3>使用多个独立配置文件（更清晰）</h3>
+  <p>复杂项目建议拆分成多个配置文件，共享一个 <code>base</code> 配置：</p>
+
+  <pre><code>// vite.config.base.ts — 公共配置
+import vue from '@vitejs/plugin-vue'
+import UnoCSS from 'unocss/vite'
+import type { UserConfig } from 'vite'
+
+export const baseConfig: UserConfig = {
+  plugins: [vue(), UnoCSS()],
+  resolve: { alias: { '@': '/src' } },
+}
+
+// vite.config.h5.ts — H5 专用
+import { defineConfig } from 'vite'
+import { baseConfig } from './vite.config.base'
+
+export default defineConfig({
+  ...baseConfig,
+  base: '/h5/',
+  build: { outDir: 'dist/h5' },
+})
+
+// vite.config.app.ts — App 专用
+import { defineConfig } from 'vite'
+import { baseConfig } from './vite.config.base'
+
+export default defineConfig({
+  ...baseConfig,
+  base: '/app/',
+  build: { outDir: 'dist/app' },
+  // 可能还会添加 App 专用插件，如 uniapp、电容插件等
+})</code></pre>
+
+  <p>脚本改为：</p>
+  <pre><code>"scripts": {
+  "dev:h5":  "vite --config vite.config.h5.ts",
+  "dev:app": "vite --config vite.config.app.ts",
+  "build:h5":  "vite build --config vite.config.h5.ts",
+  "build:app": "vite build --config vite.config.app.ts",
+}</code></pre>
+</div>
+
+<!-- 10.4 -->
+<h3>10.4 CSS 条件编译</h3>
+
+<div class="card">
+  <h3>利用 UnoCSS 配合平台编译</h3>
+  <p>你可以在 UnoCSS 配置里根据环境变量条件编译不同的样式：</p>
+  <pre><code>// uno.config.ts
+import { defineConfig } from 'unocss'
+import presetWind3 from '@unocss/preset-wind3'
+
+export default defineConfig({
+  presets: [presetWind3()],
+  theme: {
+    // H5 移动端用 750px 设计稿的 rem 基准
+    // App 端用 375px 设计稿
+    // 可以在这里根据环境动态调整
+  },
+  // shortcuts 也可以根据平台不同
+  shortcuts: {
+    'safe-area': process.env.VITE_PLATFORM === 'app'
+      ? 'pt-[env(safe-area-inset-top)]' // App 需要安全区
+      : 'pt-0',                          // H5 不需要
+  },
+})</code></pre>
+</div>
+
+<div class="card">
+  <h3>SCSS/CSS 条件编译（uni-app 风格）</h3>
+  <pre><code>/* style.css — uni-app 风格的条件编译 */
+/* #ifdef H5 */
+body {
+  max-width: 750px;
+  margin: 0 auto;
+}
+/* #endif */
+
+/* #ifdef MP-WEIXIN */
+body {
+  /* 小程序没有 body，用 page */
+}
+page {
+  background-color: #f5f5f5;
+}
+/* #endif */</code></pre>
+  <p>如果使用 uni-app，条件编译由 <code>@dcloudio/vite-plugin-uni</code> 自动处理。<br>如果是原生 Vite 项目，推荐用 <code>import.meta.env.VITE_PLATFORM</code> 在 JS 中做判断。</p>
+</div>
+
+<!-- 10.5 -->
+<h3>10.5 实战：添加一套 H5 移动端模式到你的项目</h3>
+
+<div class="card info">
+  <h3>Step 1：创建环境变量文件</h3>
+  <div class="path-block">
+    <span class="file">.env</span><br>
+    <code>VITE_APP_TITLE=我的应用</code>
+  </div>
+  <div class="path-block">
+    <span class="file">.env.h5</span><br>
+    <code>VITE_PLATFORM=h5</code><br>
+    <code>VITE_APP_TITLE=我的应用-H5版</code>
+  </div>
+  <div class="path-block">
+    <span class="file">.env.app</span><br>
+    <code>VITE_PLATFORM=app</code><br>
+    <code>VITE_APP_TITLE=我的应用-App版</code>
+  </div>
+</div>
+
+<div class="card info">
+  <h3>Step 2：在 package.json 添加脚本</h3>
+  <pre><code>{
+  "scripts": {
+    "dev":         "vite",
+    "dev:h5":      "vite --mode h5",
+    "dev:app":     "vite --mode app",
+    "build":       "vite build",
+    "build:h5":    "vite build --mode h5",
+    "build:app":   "vite build --mode app",
+    "preview":     "vite preview"
+  }
+}</code></pre>
+</div>
+
+<div class="card info">
+  <h3>Step 3：调整 vite.config.ts 根据 mode 切换行为</h3>
+  <pre><code>// vite.config.ts
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import UnoCSS from 'unocss/vite'
+
+export default defineConfig(({ mode }) => ({
+  plugins: [vue(), UnoCSS()],
+
+  base: mode === 'h5' ? '/h5/' : '/',
+
+  build: {
+    outDir: `dist/${mode === 'h5' ? 'h5' : 'web'}`,
+  },
+
+  server: {
+    // H5 移动端适配：手机扫码调试更方便
+    host: '0.0.0.0',  // 局域网可访问
+    port: mode === 'h5' ? 5175 : 5174,
+  },
+}))</code></pre>
+</div>
+
+<div class="card info">
+  <h3>Step 4：在代码中读取平台并条件执行</h3>
+  <pre><code>// src/App.vue
+&lt;script setup lang="ts"&gt;
+const platform = import.meta.env.VITE_PLATFORM || 'web'
+
+// 不同平台的初始化逻辑
+if (platform === 'h5') {
+  // H5 专用：设置 viewport、rem 适配等
+  document.documentElement.style.setProperty('--safe-bottom', 'env(safe-area-inset-bottom)')
+}
+if (platform === 'app') {
+  // App 专用：初始化原生 SDK、监听 backbutton 等
+}
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div class="min-h-screen"&gt;
+    &lt;router-view /&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+</div>
+
+<!-- 10.6 -->
+<h3>10.6 常见多平台脚本模式一览</h3>
+
+<div class="card">
+  <h3>模式 1：纯 Vite 多 mode（你当前可以用的）</h3>
+  <pre><code>"scripts": {
+  "dev":       "vite",
+  "dev:h5":    "vite --mode h5",
+  "dev:app":   "vite --mode app",
+  "build":     "vite build",
+  "build:h5":  "vite build --mode h5",
+  "build:app": "vite build --mode app",
+  "preview":   "vite preview"
+}</code></pre>
+</div>
+
+<div class="card">
+  <h3>模式 2：uni-app 跨端框架（H5 + 小程序 + App）</h3>
+  <pre><code>"scripts": {
+  "dev:h5":            "uni",
+  "dev:mp-weixin":     "uni -p mp-weixin",
+  "dev:mp-baidu":      "uni -p mp-baidu",
+  "dev:mp-alipay":     "uni -p mp-alipay",
+  "dev:mp-toutiao":    "uni -p mp-toutiao",
+  "build:h5":          "uni build",
+  "build:mp-weixin":   "uni build -p mp-weixin",
+  "build:app-plus":    "uni build -p app-plus"
+}</code></pre>
+  <p class="badge note">uni-app 使用 <code>-p</code>（platform）而不是 <code>--mode</code></p>
+</div>
+
+<div class="card">
+  <h3>模式 3：Taro 跨端框架（React/Vue3 + 小程序 + H5）</h3>
+  <pre><code>"scripts": {
+  "dev:h5":           "taro build --type h5 --watch",
+  "dev:weapp":        "taro build --type weapp --watch",
+  "build:h5":         "taro build --type h5",
+  "build:weapp":      "taro build --type weapp",
+  "build:alipay":     "taro build --type alipay"
+}</code></pre>
+</div>
+
+<div class="card">
+  <h3>模式 4：Nuxt 多环境（SSR 框架）</h3>
+  <pre><code>"scripts": {
+  "dev":        "nuxt dev",
+  "dev:staging": "nuxt dev --dotenv .env.staging",
+  "build":      "nuxt build",
+  "build:dev":  "nuxt build --dotenv .env.development",
+  "generate":   "nuxt generate",
+  "preview":    "nuxt preview"
+}</code></pre>
+</div>
+
+<!-- 10.7 -->
+<h3>10.7 速记：这些命令的本质</h3>
+
+<div class="card">
+  <table>
+    <tr><th>命令</th><th>底层实际执行</th><th>效果</th></tr>
+    <tr>
+      <td><code>pnpm dev</code></td>
+      <td><code>vite</code></td>
+      <td>载入 <code>.env</code> + <code>.env.development</code>，启动开发服务器</td>
+    </tr>
+    <tr>
+      <td><code>pnpm dev:h5</code></td>
+      <td><code>vite --mode h5</code></td>
+      <td>载入 <code>.env</code> + <code>.env.h5</code> + <code>.env.h5.local</code>，H5 模式开发</td>
+    </tr>
+    <tr>
+      <td><code>pnpm build</code></td>
+      <td><code>vite build</code></td>
+      <td>载入 <code>.env</code> + <code>.env.production</code>，生产构建</td>
+    </tr>
+    <tr>
+      <td><code>pnpm build:h5</code></td>
+      <td><code>vite build --mode h5</code></td>
+      <td>载入 <code>.env</code> + <code>.env.h5</code>，构建 H5 产物到 <code>dist/</code></td>
+    </tr>
+    <tr>
+      <td><code>pnpm preview</code></td>
+      <td><code>vite preview</code></td>
+      <td>以生产模式预览 <code>dist/</code> 目录的构建产物</td>
+    </tr>
+  </table>
+</div>
+
+<div class="card warn">
+  <h3>关键要点</h3>
+  <ol>
+    <li><strong>冒号 <code>:</code> 只是命名约定</strong>——你完全可以用 <code>dev-h5</code>、<code>h5:dev</code> 等任意名字，团队习惯用 <code>动作:目标</code> 格式。</li>
+    <li><strong><code>--mode X</code></strong> 让 Vite 加载 <code>.env.X</code>，你可以在 <code>vite.config.ts</code> 中通过 <code>mode</code> 参数读取。</li>
+    <li><strong><code>import.meta.env.VITE_XXX</code></strong> 可在任何源码中读取环境变量，<code>VITE_</code> 前缀是强制要求。</li>
+    <li><strong>不同平台的产物</strong> 通常写到 <code>dist/{platform}/</code>，避免互相覆盖。</li>
+    <li>pnpm 的 <code>run</code> 可以省略：<code>pnpm dev:h5</code> 等价于 <code>pnpm run dev:h5</code>。</li>
+  </ol>
+</div>
+
+<!-- ============ 11 ============ -->
+<h2 id="c11">11. 速查表</h2>
+
+<div class="card">
+  <table>
+    <tr><th>事项</th><th>命令 / 配置</th></tr>
+    <tr><td>安装 pnpm</td><td><code>npm install -g pnpm</code></td></tr>
+    <tr><td>创建 Vue 3 项目</td><td><code>pnpm create vite@latest my-app -- --template vue-ts</code></td></tr>
+    <tr><td>安装依赖</td><td><code>pnpm install</code></td></tr>
+    <tr><td>启动开发</td><td><code>pnpm dev</code></td></tr>
+    <tr><td>安装 UnoCSS 全家桶</td><td><code>pnpm add -D unocss @unocss/reset @unocss/preset-wind3 @unocss/preset-icons @unocss/preset-attributify</code></td></tr>
+    <tr><td>安装图标</td><td><code>pnpm add -D @iconify-json/carbon</code></td></tr>
+    <tr><td>锁文件</td><td><code>pnpm-lock.yaml</code>（必须提交 Git）</td></tr>
+    <tr><td>UnoCSS 入口</td><td><code>main.ts</code> 中导入 <code>import 'virtual:uno.css'</code></td></tr>
+    <tr><td>配置文件</td><td>项目根目录 <code>uno.config.ts</code></td></tr>
+    <tr><td>Vite 插件注册</td><td><code>vite.config.ts</code> 中 <code>import UnoCSS from 'unocss/vite'</code></td></tr>
+    <tr><td>Tailwind 兼容</td><td>安装 <code>@unocss/preset-wind3</code>，语法完全兼容</td></tr>
+    <tr><td>联合使用策略</td><td>推荐策略 A：只用 UnoCSS，无需 Tailwind CSS</td></tr>
+    <tr><td>Shortcuts</td><td><code>uno.config.ts</code> 的 <code>shortcuts</code> 字段（替代 @apply）</td></tr>
+    <tr><td>图标渲染</td><td>纯 CSS SVG，class 格式 <code>i-{图标集}-{图标名}</code></td></tr>
+    <tr><td>Variant Group</td><td><code>hover:(bg-red text-white)</code>，需启用 transformer</td></tr>
+    <tr><td>H5 模式开发</td><td><code>pnpm dev:h5</code>，脚本定义为 <code>"dev:h5": "vite --mode h5"</code></td></tr>
+    <tr><td>多平台构建</td><td><code>pnpm build:h5</code>，脚本定义为 <code>"build:h5": "vite build --mode h5"</code></td></tr>
+    <tr><td>环境变量文件</td><td><code>.env.h5</code>、<code>.env.app</code>、<code>.env.mp-weixin</code></td></tr>
+    <tr><td>代码读取平台</td><td><code>import.meta.env.VITE_PLATFORM</code></td></tr>
+    <tr><td>指定配置文件</td><td><code>"dev:app": "vite --config vite.config.app.ts"</code></td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>预设对照表</h3>
+  <table>
+    <tr><th>Preset 包名</th><th>对应 Tailwind / 功能</th></tr>
+    <tr><td><code>@unocss/preset-wind3</code></td><td>Tailwind CSS v3 完整兼容</td></tr>
+    <tr><td><code>@unocss/preset-wind4</code></td><td>Tailwind CSS v4 兼容（实验性）</td></tr>
+    <tr><td><code>@unocss/preset-uno</code></td><td>UnoCSS 自有的默认预设（与 Wind 略有差异）</td></tr>
+    <tr><td><code>@unocss/preset-icons</code></td><td>Iconify 图标（20 万+ 图标，纯 CSS）</td></tr>
+    <tr><td><code>@unocss/preset-attributify</code></td><td>HTML attribute 模式写样式</td></tr>
+    <tr><td><code>@unocss/preset-typography</code></td><td>排版预设（类似 @tailwindcss/typography）</td></tr>
+    <tr><td><code>@unocss/preset-web-fonts</code></td><td>Web 字体（Google Fonts 等）</td></tr>
+    <tr><td><code>@unocss/preset-rem-to-px</code></td><td>自动 rem → px 转换</td></tr>
+  </table>
+</div>
+
+</div>
+</body>
+</html>

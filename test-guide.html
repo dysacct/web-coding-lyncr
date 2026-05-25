@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录页 API 联调测试指南</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: #334155;
+    --text: #e2e8f0;
+    --dim: #94a3b8;
+    --accent: #38bdf8;
+    --green: #4ade80;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --purple: #a78bfa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    padding: 40px 20px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 {
+    font-size: 1.8rem; text-align: center; margin-bottom: 24px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  h2 {
+    font-size: 1.25rem; margin: 32px 0 14px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border); color: var(--accent);
+  }
+  h3 { font-size: 1.05rem; margin: 20px 0 8px; color: var(--purple); }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 22px; margin-bottom: 20px;
+  }
+  .card.green  { border-left: 4px solid var(--green); }
+  .card.yellow { border-left: 4px solid var(--yellow); }
+  .card.red    { border-left: 4px solid var(--red); }
+
+  code {
+    background: #0f172a; padding: 2px 7px; border-radius: 4px;
+    font-size: 0.88rem; color: var(--green);
+  }
+  pre {
+    background: #0f172a; border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 18px; overflow-x: auto; margin: 10px 0;
+    font-size: 0.84rem; line-height: 1.7;
+  }
+  pre code { background: none; padding: 0; color: var(--text); }
+  pre .dim { color: var(--dim); }
+
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9rem; }
+  th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--accent); font-weight: 600; }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+  .badge.ok   { background: #14532d; color: var(--green); }
+  .badge.warn { background: #422006; color: var(--yellow); }
+  .badge.err  { background: #4c0519; color: var(--red); }
+
+  ul, ol { padding-left: 22px; margin: 8px 0; }
+  li { margin: 5px 0; }
+
+  .step { margin-bottom: 28px; }
+  .step h3 { display: flex; align-items: center; gap: 10px; }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--accent);
+    color: #0f172a; font-weight: 700; font-size: 0.82rem; flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>登录页 API 联调测试指南</h1>
+
+<!-- ============ 当前状态 ============ -->
+<h2>当前项目状态</h2>
+
+<div class="card">
+  <table>
+    <tr><th width="200">项目</th><th>状态</th><th>说明</th></tr>
+    <tr>
+      <td>Apifox 服务</td>
+      <td><span class="badge ok">运行中</span></td>
+      <td>端口 <code>4523</code></td>
+    </tr>
+    <tr>
+      <td>前端代码</td>
+      <td><span class="badge ok">就绪</span></td>
+      <td>axios 封装 + Login.vue 改造已完成</td>
+    </tr>
+    <tr>
+      <td><code>login</code> 接口</td>
+      <td><span class="badge warn">需配置</span></td>
+      <td>已定义但 Mock 返回为空，需配响应示例</td>
+    </tr>
+    <tr>
+      <td><code>register</code> 接口</td>
+      <td><span class="badge warn">需配置</span></td>
+      <td>同上</td>
+    </tr>
+    <tr>
+      <td><code>send-captcha</code> 接口</td>
+      <td><span class="badge warn">需配 Mock</span></td>
+      <td>已定义但 Mock 返回为空，需配响应示例</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============ 步骤 1 ============ -->
+<h2>步骤 1：确保 Apifox 里 3 个接口完整</h2>
+
+<div class="step">
+  <h3><span class="step-num">1</span>在 Apifox "Web端接口" 项目里创建/完善接口</h3>
+</div>
+
+<div class="card yellow">
+  <p>打开 Apifox → 项目 <strong>"Web端接口"</strong> → 左侧 <strong>"API 管理"</strong> → 找到或创建 <strong>"鉴权接口"</strong> 分组，确保以下 3 个接口都存在且 Mock 响应已配置：</p>
+</div>
+
+<h3>① send-captcha（发送验证码）<span class="badge warn">需配 Mock</span></h3>
+<div class="card">
+  <table>
+    <tr><th>方法</th><td><code>POST</code></td></tr>
+    <tr><th>路径</th><td><code>/api/v1/auth/send-captcha</code></td></tr>
+  </table>
+  <p>Body (JSON)：</p>
+  <pre><code>{"phone": "13800138000"}</code></pre>
+  <p>Mock 响应 (JSON)：</p>
+  <pre><code>{
+  "code": 0,
+  "message": "验证码已发送"
+}</code></pre>
+</div>
+
+<h3>② login（用户登录）<span class="badge warn">需配 Mock</span></h3>
+<div class="card">
+  <table>
+    <tr><th>方法</th><td><code>POST</code></td></tr>
+    <tr><th>路径</th><td><code>/api/v1/auth/login</code></td></tr>
+  </table>
+  <p>Mock 响应 (JSON)：</p>
+  <pre><code>{
+  "code": 0,
+  "message": "登录成功",
+  "data": {
+    "token": "test-token-abc123",
+    "userId": 1,
+    "nickname": "测试用户"
+  }
+}</code></pre>
+</div>
+
+<h3>③ register（用户注册）<span class="badge warn">需配 Mock</span></h3>
+<div class="card">
+  <table>
+    <tr><th>方法</th><td><code>POST</code></td></tr>
+    <tr><th>路径</th><td><code>/api/v1/auth/register</code></td></tr>
+  </table>
+  <p>Body (JSON)：</p>
+  <pre><code>{"phone": "13800138000", "code": "888888"}</code></pre>
+  <p>Mock 响应 (JSON)：</p>
+  <pre><code>{
+  "code": 0,
+  "message": "注册成功",
+  "data": {
+    "token": "test-token-xyz789",
+    "userId": 2,
+    "nickname": "新用户"
+  }
+}</code></pre>
+</div>
+
+<!-- ============ 步骤 2 ============ -->
+<h2>步骤 2：用 curl 验证 Mock 接口</h2>
+
+<div class="card green">
+  <p>先不启动前端，用终端直接验证 Apifox Mock 是否返回正确数据：</p>
+
+  <h3>验证登录接口</h3>
+  <pre><code>curl -s -X POST http://localhost:4523/mock/8311458/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"phone":"13800138000","password":"123456"}' | python3 -m json.tool</code></pre>
+  <p>期望：返回包含 <code>"token"</code>、<code>"userId"</code>、<code>"nickname"</code> 的 JSON。</p>
+
+  <h3>验证发送验证码</h3>
+  <pre><code>curl -s -X POST http://localhost:4523/mock/8311458/api/v1/auth/send-captcha \
+  -H 'Content-Type: application/json' \
+  -d '{"phone":"13800138000"}' | python3 -m json.tool</code></pre>
+
+  <h3>验证注册</h3>
+  <pre><code>curl -s -X POST http://localhost:4523/mock/8311458/api/v1/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"phone":"13800138000","code":"888888"}' | python3 -m json.tool</code></pre>
+
+  <p>全部通过后进入下一步。如果返回 <code>Not Found</code> 或 <code>apifoxError</code>，回到步骤 1 检查。</p>
+</div>
+
+<!-- ============ 步骤 3 ============ -->
+<h2>步骤 3：启动前端</h2>
+
+<div class="card green">
+  <pre><code>cd /Users/dongyasong/workspace/login-simple/my-login-app
+pnpm dev</code></pre>
+  <p>浏览器打开 <strong><code>http://localhost:5174</code></strong></p>
+</div>
+
+<!-- ============ 步骤 4 ============ -->
+<h2>步骤 4：测试登录流程</h2>
+
+<h3>4.1 密码登录</h3>
+<div class="card">
+  <ol>
+    <li>确认页面标题为<strong>"欢迎登录"</strong>，默认在<strong>"密码登录"</strong>标签</li>
+    <li>输入手机号 <code>13800138000</code></li>
+    <li>输入密码 <code>123456</code></li>
+    <li>勾选<strong>"我已阅读并同意用户协议与隐私政策"</strong></li>
+    <li>点击<strong>"立即登录"</strong></li>
+    <li>按钮显示 <strong>"登录中..."</strong> → 成功后弹出绿色 Toast → 自动跳转到 Lyncr 控制台</li>
+  </ol>
+</div>
+
+<h3>4.2 验证码登录</h3>
+<div class="card">
+  <ol>
+    <li>点击<strong>"验证码登录"</strong>标签</li>
+    <li>输入手机号 → 点击<strong>"获取验证码"</strong> → 按钮变成 60s 倒计时</li>
+    <li>输入任意 6 位验证码（Mock 不校验具体值）</li>
+    <li>勾选协议 → 点击<strong>"立即登录"</strong></li>
+    <li>成功后跳转控制台</li>
+  </ol>
+</div>
+
+<h3>4.3 注册流程</h3>
+<div class="card">
+  <ol>
+    <li>点击底部<strong>"立即注册"</strong></li>
+    <li>输入手机号 → 获取验证码 → 输入验证码</li>
+    <li>勾选协议 → 点击<strong>"立即注册"</strong></li>
+    <li>成功后自动切换到验证码登录页并完成登录</li>
+  </ol>
+</div>
+
+<!-- ============ 请求链路 ============ -->
+<h2>请求链路说明</h2>
+
+<div class="card">
+  <pre><code>
+  浏览器                     Vite 代理                     Apifox
+  ──────                     ────────                     ──────
+  POST /api/v1/auth/login  → 转发到 mock/8311458/api  →  返回 Mock JSON
+  (no CORS)                  /v1/auth/login
+  </code></pre>
+  <ul>
+    <li>前端 <code>baseURL: '/api'</code>，所有请求是相对路径，不跨域</li>
+    <li>Vite proxy 将 <code>/api/*</code> 转发到 <code>http://localhost:4523/mock/8311458/api/*</code></li>
+    <li>axios 请求拦截器自动从 <code>localStorage</code> 读取 token 注入 <code>Authorization</code> 头</li>
+    <li>axios 响应拦截器统一解包 <code>response.data</code>，HTTP 错误转中文提示</li>
+  </ul>
+</div>
+
+<!-- ============ 排查 ============ -->
+<h2>常见问题</h2>
+
+<div class="card">
+  <h3>① 点击登录后提示"网络错误"</h3>
+  <ol>
+    <li>终端执行 <code>lsof -i :4523</code> 确认 Apifox 在运行</li>
+    <li>用步骤 2 的 curl 命令测试 API 是否通</li>
+    <li>如果 curl 通但前端不通 → 重启 <code>pnpm dev</code></li>
+  </ol>
+
+  <h3>② 浏览器控制台报 CORS 错误</h3>
+  <p>检查前端请求路径是否以 <code>/api</code> 开头（相对路径）。如果代码里写的是 <code>http://localhost:4523/...</code>（绝对路径），会跨域。正确写法是只用 <code>/api/v1/auth/login</code>。</p>
+
+  <h3>③ 登录成功但没跳转</h3>
+  <p>检查 Apifox Mock 响应里 <code>data.token</code> 字段是否存在。前端依赖 <code>data.token</code> 存储并跳转。</p>
+
+  <h3>④ 如何从 Mock 切换到真实后端</h3>
+  <p>修改 <code>vite.config.ts</code> 的 proxy target：</p>
+  <pre><code>// Mock 模式（当前）
+target: 'http://localhost:4523/mock/8311458/api'
+
+// 真实后端
+target: 'https://your-api-server.com/api'</code></pre>
+</div>
+
+<!-- ============ 文件索引 ============ -->
+<h2>相关文件</h2>
+
+<div class="card">
+  <table>
+    <tr><th>文件</th><th>作用</th></tr>
+    <tr><td><code>src/api/request.ts</code></td><td>axios 实例 + 拦截器</td></tr>
+    <tr><td><code>src/api/modules/auth.ts</code></td><td>登录/注册/验证码 API</td></tr>
+    <tr><td><code>src/api/index.ts</code></td><td>统一导出</td></tr>
+    <tr><td><code>src/views/Login.vue</code></td><td>登录页面组件</td></tr>
+    <tr><td><code>src/composables/useAuth.ts</code></td><td>登录状态 & token 管理</td></tr>
+    <tr><td><code>vite.config.ts</code></td><td>Vite 代理配置</td></tr>
+  </table>
+</div>
+
+</div>
+</body>
+</html>
