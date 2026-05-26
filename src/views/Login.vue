@@ -4,16 +4,18 @@ import { useAuth } from '@/composables/useAuth'
 import {
   CAPTCHA_PURPOSE,
   sendCode as sendCodeApi,
+  sendEmailCode as sendEmailCodeApi,
   loginByPassword,
   loginByCode,
+  loginByEmailPassword,
+  loginByEmailCode,
   registerByPhone,
 } from '@/api/modules/auth'
 
-const { login, loginAdmin } = useAuth()
+const { login } = useAuth()
 
 const authMode = ref<'login' | 'register'>('login')
 const loginType = ref<'password' | 'code' | 'qrcode'>('password')
-const loginMethod = ref<'phone' | 'admin'>('phone')
 const submitting = ref(false)
 
 const formData = reactive({
@@ -24,11 +26,6 @@ const formData = reactive({
   rememberMe: false,
   isAgreed: false,
   registerAgreed: false,
-})
-
-const adminForm = reactive({
-  username: '',
-  password: '',
 })
 
 const registerCountdown = ref(0)
@@ -57,6 +54,17 @@ function isValidPhone(phone: string) {
   return /^1\d{10}$/.test(phone)
 }
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+function detectAccountType(val: string): 'phone' | 'email' | null {
+  if (!val) return null
+  if (/^1\d{10}$/.test(val)) return 'phone'
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return 'email'
+  return null
+}
+
 function startCountdown(
   target: typeof countdown,
   timerRef: typeof countdownTimer,
@@ -74,18 +82,22 @@ function startCountdown(
 }
 
 async function sendCode() {
-  if (!formData.phone) {
-    showToast('请输入手机号')
+  const val = formData.phone
+  if (!val) {
+    showToast('请输入手机号或邮箱')
     return
   }
-  if (!isValidPhone(formData.phone)) {
-    showToast('请输入正确的手机号')
+  const accType = detectAccountType(val)
+  if (!accType) {
+    showToast('请输入正确的手机号或邮箱')
     return
   }
   if (countdown.value > 0) return
 
   try {
-    const data = await sendCodeApi(formData.phone)
+    const data = accType === 'phone'
+      ? await sendCodeApi(val)
+      : await sendEmailCodeApi(val)
     if (data.code === 0) {
       showToast('验证码已发送', 'success')
       startCountdown(countdown, countdownTimer)
@@ -127,21 +139,32 @@ async function handleLogin() {
     return
   }
 
+  const val = formData.phone
   const isPassword = loginType.value === 'password'
-  if (isPassword && (!formData.phone || !formData.password)) {
-    showToast('请填写手机号和密码')
+
+  if (!val || (isPassword ? !formData.password : !formData.code)) {
+    showToast(isPassword ? '请填写账号和密码' : '请填写账号和验证码')
     return
   }
-  if (!isPassword && (!formData.phone || !formData.code)) {
-    showToast('请填写手机号和验证码')
+
+  const accType = detectAccountType(val)
+  if (!accType) {
+    showToast('请输入正确的手机号或邮箱')
     return
   }
 
   submitting.value = true
   try {
-    const data = isPassword
-      ? await loginByPassword(formData.phone, formData.password)
-      : await loginByCode(formData.phone, formData.code)
+    let data
+    if (accType === 'phone') {
+      data = isPassword
+        ? await loginByPassword(val, formData.password)
+        : await loginByCode(val, formData.code)
+    } else {
+      data = isPassword
+        ? await loginByEmailPassword(val, formData.password)
+        : await loginByEmailCode(val, formData.code)
+    }
 
     if (data.code === 0) {
       showToast(isPassword ? '密码登录成功' : '验证码登录成功', 'success')
@@ -197,17 +220,6 @@ async function handleRegister() {
     showToast(error.message || '网络错误，请确认后端服务已启动')
   } finally {
     submitting.value = false
-  }
-}
-
-async function handleAdminLogin() {
-  if (!adminForm.username || !adminForm.password) {
-    showToast('请输入用户名和密码')
-    return
-  }
-  const ok = loginAdmin(adminForm.username, adminForm.password)
-  if (!ok) {
-    showToast('用户名或密码错误', 'warning')
   }
 }
 
@@ -292,30 +304,7 @@ onUnmounted(() => {
 
       <template v-else>
 
-        <!-- Admin login -->
-        <template v-if="loginMethod === 'admin'">
-          <div class="space-y-5 animate-fade-in animate-duration-200">
-            <input v-model="adminForm.username" type="text" placeholder="请输入用户名"
-              class="w-full glass-input px-5 py-3.5 text-base" />
-            <input v-model="adminForm.password" type="password" placeholder="请输入密码"
-              class="w-full glass-input px-5 py-3.5 text-base" />
-          </div>
-
-          <button type="button"
-            class="w-full mt-7 py-3.5 bg-[#007aff] hover:bg-blue-500 active:bg-blue-600 text-white font-medium rounded-xl text-base shadow-lg shadow-blue-500/10 active:scale-[0.99] transition-all flex items-center justify-center border-none"
-            @click="handleAdminLogin">
-            管理员登录
-          </button>
-
-          <p class="text-center text-sm text-zinc-500 mt-6">
-            <span class="text-blue-400 hover:underline cursor-pointer" @click="loginMethod = 'phone'">
-              返回手机登录
-            </span>
-          </p>
-        </template>
-
-        <!-- Phone login -->
-        <template v-else>
+        <!-- Password / Code tabs -->
           <div v-if="loginType !== 'qrcode'" class="p-1 bg-black/40 rounded-xl flex mb-7 border border-white/5">
             <div
               class="flex-1 text-center py-2.5 text-sm font-medium rounded-lg cursor-pointer transition-all duration-200"
@@ -332,7 +321,7 @@ onUnmounted(() => {
           </div>
 
           <div v-if="loginType === 'password'" class="space-y-5 animate-fade-in animate-duration-200">
-            <input v-model="formData.phone" type="tel" maxlength="11" placeholder="请输入手机号"
+            <input v-model="formData.phone" type="text" placeholder="请输入手机号或邮箱"
               class="w-full bg-zinc-800/40 border border-white/5 rounded-xl px-5 py-3.5 text-white text-base placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 focus:bg-zinc-800/60 transition-all" />
             <input v-model="formData.password" type="password" placeholder="请输入密码"
               class="w-full bg-zinc-800/40 border border-white/5 rounded-xl px-5 py-3.5 text-white text-base placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 focus:bg-zinc-800/60 transition-all" />
@@ -351,7 +340,7 @@ onUnmounted(() => {
           </div>
 
           <div v-if="loginType === 'code'" class="space-y-5 animate-fade-in animate-duration-200">
-            <input v-model="formData.phone" type="tel" maxlength="11" placeholder="请输入手机号"
+            <input v-model="formData.phone" type="text" placeholder="请输入手机号或邮箱"
               class="w-full bg-zinc-800/40 border border-white/5 rounded-xl px-5 py-3.5 text-white text-base placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 focus:bg-zinc-800/60 transition-all" />
             <div class="flex space-x-3">
               <input v-model="formData.code" type="text" inputmode="numeric" maxlength="6" placeholder="验证码"
@@ -423,12 +412,6 @@ onUnmounted(() => {
               立即注册
             </span>
           </p>
-
-          <p class="text-center text-xs text-zinc-600 mt-2">
-            <span class="hover:text-blue-400 cursor-pointer transition-colors"
-              @click="loginMethod = 'admin'">管理员登录</span>
-          </p>
-        </template>
       </template>
     </div>
 

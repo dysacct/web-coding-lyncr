@@ -75,6 +75,26 @@ export function loginByCode(phone: string, code: string, turnstileToken?: string
   })
 }
 
+/** 邮箱 + 密码登录 */
+export function loginByEmailPassword(email: string, password: string, turnstileToken?: string) {
+  return login({
+    type: ACCOUNT_TYPE.email,
+    identifier: email,
+    credential: password,
+    ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+  })
+}
+
+/** 邮箱 + 验证码登录 */
+export function loginByEmailCode(email: string, code: string, turnstileToken?: string) {
+  return login({
+    type: ACCOUNT_TYPE.email,
+    identifier: email,
+    credential: code,
+    ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+  })
+}
+
 /** 发送验证码 */
 export function sendCode(
   phone: string,
@@ -84,6 +104,21 @@ export function sendCode(
   const body: AuthSendCaptchaBody = {
     type: ACCOUNT_TYPE.phone,
     identifier: phone,
+    purpose,
+    ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+  }
+  return request.post<ApiResult>('/v1/auth/send-captcha', body)
+}
+
+/** 发送邮箱验证码 */
+export function sendEmailCode(
+  email: string,
+  purpose: (typeof CAPTCHA_PURPOSE)[keyof typeof CAPTCHA_PURPOSE] = CAPTCHA_PURPOSE.login,
+  turnstileToken?: string,
+) {
+  const body: AuthSendCaptchaBody = {
+    type: ACCOUNT_TYPE.email,
+    identifier: email,
     purpose,
     ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
   }
@@ -105,6 +140,23 @@ export function registerByPhone(
   return register({
     type: ACCOUNT_TYPE.phone,
     identifier: phone,
+    credential: password,
+    confirm_credential: password,
+    captcha,
+    ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+  })
+}
+
+/** 邮箱注册（验证码 + 密码） */
+export function registerByEmail(
+  email: string,
+  captcha: string,
+  password: string,
+  turnstileToken?: string,
+) {
+  return register({
+    type: ACCOUNT_TYPE.email,
+    identifier: email,
     credential: password,
     confirm_credential: password,
     captcha,

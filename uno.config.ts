@@ -4,6 +4,9 @@ import presetIcons from '@unocss/preset-icons'
 import { transformerVariantGroup } from 'unocss'
 
 export default defineConfig({
+  content: {
+    filesystem: ['src/**/*.{vue,ts,js,tsx,jsx}'],
+  },
   presets: [
     presetWind3(),
     presetIcons({

@@ -28,18 +28,6 @@ export function useAuth() {
     authRouter?.push('/dashboard')
   }
 
-  function loginAdmin(username: string, password: string): boolean {
-    if (username === 'admin' && password === 'admin') {
-      const token = `admin_${Date.now()}`
-      localStorage.setItem(TOKEN_KEY, token)
-      isLoggedIn.value = true
-      adminUser.value = { username: 'admin', role: '管理员', stones: 0 }
-      authRouter?.push('/dashboard')
-      return true
-    }
-    return false
-  }
-
   function logout() {
     localStorage.removeItem(TOKEN_KEY)
     isLoggedIn.value = false
@@ -59,7 +47,6 @@ export function useAuth() {
     isLoggedIn,
     adminUser,
     login,
-    loginAdmin,
     logout,
     goToLogin,
     getToken,
